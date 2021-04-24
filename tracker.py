@@ -2,9 +2,9 @@ import requests
 import time
 
 # global variables
-api_key = "4c6a0e82-f6f9-4552-995f-8b0553b0d826"
+api_key = "api_key_of_coinmarketcap"
 bot_token = "1717950175:AAHUAdok5XIe-K4OZ2DjnYe2laiG_G-z5M8"
-chat_id = "1670488297"
+chat_id = "telegram chat id"
 time_int = 5 * 60
 threshold = 0.2751
 
