@@ -1,46 +1,55 @@
+from inspect import Parameter
 import requests
 import time
+import telebot
+
 
 # global variables
-api_key = "api_key_of_coinmarketcap"
-bot_token = "1717950175:AAHUAdok5XIe-K4OZ2DjnYe2laiG_G-z5M8"
-chat_id = "telegram chat id"
-time_int = 5 * 60
-threshold = 0.2751
+bot_token = ""
+api_key = ""
+chat_id = ""
 
 
-def get_doge_price():
-    url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
+
+bot=telebot.TeleBot(bot_token)
+
+def get_id(coin):
+    Id_url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/map"
+    parameters = {
+        'symbol': coin
+    }
     headers = {
         'Accepts': 'application/json',
         'X-CMC_PRO_API_KEY': api_key,
     }
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(Id_url, params=parameters, headers=headers)
     response_json = response.json()
+    return response_json['data'][0]['id']
 
-    doge_price = response_json['data'][6]
-    return doge_price['quote']['USD']['price']
+def get_coin_price(coin):
+    id = get_id(coin)
+    url = "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest"
+    parameters = {
+        'id' :  id,
+        'convert' : 'INR'
+    }
+    headers = {
+        'Accepts': 'application/json',
+        'X-CMC_PRO_API_KEY': api_key,
+    }
 
-
-def send_message(chat_id, msg):
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage?chat_id={chat_id}&text={msg}"
-
-    requests.get(url)
-
-
-def main():
-    price_list = []
-
-    while True:
-        price = get_doge_price()
-        price_list.append(price)
-
-        if price < threshold:
-            send_message(chat_id=chat_id, msg=f"current Doge price: {price} and price of current holding: {price * 154}")
-
-        time.sleep(time_int)
+    response = requests.get(url, params=parameters, headers=headers,)
+    response_json = response.json()
+    return response_json['data'][str(id)]['quote']['INR']['price']
 
 
-if __name__ == '__main__':
-    main()
+@bot.message_handler(commands=['btc','eth','bnb','xrp','ada','sol'])
+def price_bot(message):
+    val = message.text
+    coin = val.replace("/","")
+    prices = get_coin_price(coin)
+    chat = f"price of {coin} in INR: {prices}"
+    bot.send_message(message.chat.id,chat)
+
+bot.polling()
